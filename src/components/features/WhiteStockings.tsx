@@ -2,268 +2,195 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowPathIcon, ExclamationCircleIcon, KeyIcon, ClockIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
+import { 
+  ArrowPathIcon, 
+  ExclamationCircleIcon,
+  ArrowsPointingOutIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
 
-interface ApiResponse {
-  code: number;
-  msg: string;
-  data: string;
+interface ImageData {
+  pid: number;
+  p: number;
+  uid: number;
+  title: string;
+  author: string;
+  r18: boolean;
+  width: number;
+  height: number;
+  tags: string[];
+  ext: string;
+  aiType: number;
+  uploadDate: number;
+  urls: {
+    original?: string;
+    regular?: string;
+    small?: string;
+    thumb?: string;
+    mini?: string;
+  };
 }
 
-type StockingType = 'white' | 'black';
+interface ApiResponse {
+  error: string;
+  data: ImageData[];
+}
 
 export default function WhiteStockings() {
-  const [images, setImages] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
-  const [retryCount, setRetryCount] = useState(0);
-  const [cooldown, setCooldown] = useState(0);
-  const [lastFetchTime, setLastFetchTime] = useState(0);
-  const [stockingType, setStockingType] = useState<StockingType>('white');
+  const [images, setImages] = useState<ImageData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
 
-  const getApiUrl = (type: StockingType) => {
-    return type === 'white' 
-      ? 'https://v2.api-m.com/api/baisi'
-      : 'https://v2.api-m.com/api/heisi';
-  };
-
-  const fetchSingleImage = async (type: StockingType, retryCount = 0): Promise<string> => {
-    try {
-      const response = await fetch(getApiUrl(type));
-      
-      if (response.status === 429) {
-        // 如果遇到请求限制，等待一段时间后重试
-        if (retryCount < 3) {
-          await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
-          return fetchSingleImage(type, retryCount + 1);
-        } else {
-          throw new Error('请求过于频繁，请稍后再试');
-        }
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: ApiResponse = await response.json();
-      if (data.code === 200 && data.data) {
-        return data.data;
-      }
-      throw new Error(data.msg || '获取图片失败');
-    } catch (err) {
-      if (err instanceof Error && err.message.includes('429')) {
-        throw new Error('请求过于频繁，请稍后再试');
-      }
-      throw err;
-    }
-  };
-
-  const fetchImages = useCallback(async () => {
-    const now = Date.now();
-    const timeSinceLastFetch = now - lastFetchTime;
-    
-    // 增加冷却时间到5秒
-    if (timeSinceLastFetch < 5000) {
-      const remainingTime = Math.ceil((5000 - timeSinceLastFetch) / 1000);
-      setCooldown(remainingTime);
-      return;
-    }
-
+  // 获取图片
+  const fetchImages = async () => {
     try {
       setLoading(true);
       setError('');
-      setLastFetchTime(now);
-      
-      // 分批请求图片，每批3张，间隔1秒
-      const batchSize = 3;
-      const batches = Math.ceil(10 / batchSize);
-      const allImages: string[] = [];
 
-      for (let i = 0; i < batches; i++) {
-        const batchPromises = Array(Math.min(batchSize, 10 - i * batchSize))
-          .fill(null)
-          .map(() => fetchSingleImage(stockingType));
+      const response = await fetch('/api/anime', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          r18: 0,
+          num: 8,
+          size: ['regular', 'small'],
+          tag: ['白丝'],
+          excludeAI: true
+        })
+      });
 
-        const batchImages = await Promise.all(batchPromises);
-        allImages.push(...batchImages);
-
-        if (i < batches - 1) {
-          // 批次之间等待1秒
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+      if (!response.ok) {
+        throw new Error('获取图片失败');
       }
-      
-      setImages(allImages);
-      setRetryCount(0);
+
+      const data: ApiResponse = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setImages(data.data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '获取图片时出错';
-      console.error('Error fetching images:', err);
-      
-      let detailedError = errorMessage;
-      if (errorMessage.includes('429') || errorMessage.includes('频繁')) {
-        detailedError = `
-          请求过于频繁
-          请等待一段时间后再试
-          
-          建议：
-          1. 减少请求频率
-          2. 等待几分钟后重试
-          3. 使用缓存的图片
-        `;
-      }
-      
-      setError(detailedError);
-      
-      if (retryCount < 3 && !errorMessage.includes('频繁')) {
-        setRetryCount(prev => prev + 1);
-        setTimeout(fetchImages, 3000);
-      }
+      console.error('Error:', err);
+      setError(err instanceof Error ? err.message : '获取图片失败，请重试');
     } finally {
       setLoading(false);
     }
-  }, [retryCount, lastFetchTime, stockingType]);
+  };
 
-  useEffect(() => {
-    if (cooldown > 0) {
-      const timer = setTimeout(() => {
-        setCooldown(prev => prev - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [cooldown]);
-
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.code === 'Space' || event.code === 'Enter') {
-        event.preventDefault();
-        if (cooldown === 0) {
-          fetchImages();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [fetchImages, cooldown]);
-
+  // 初始加载
   useEffect(() => {
     fetchImages();
-  }, [fetchImages]);
+  }, []);
 
   return (
     <div className="p-4 sm:p-6 pt-0">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={loading ? 'loading' : error ? 'error' : 'gallery'}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"
-              >
-                <KeyIcon className="h-4 w-4" />
-                <span>按空格键或回车键可快速换图</span>
-              </motion.div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setStockingType(prev => prev === 'white' ? 'black' : 'white')}
-                className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                <ArrowsRightLeftIcon className="h-4 w-4" />
-                <span>切换{stockingType === 'white' ? '黑丝' : '白丝'}</span>
-              </motion.button>
-            </div>
-            <motion.button
-              whileHover={{ scale: cooldown === 0 ? 1.05 : 1 }}
-              whileTap={{ scale: cooldown === 0 ? 0.95 : 1 }}
-              onClick={() => cooldown === 0 && fetchImages()}
-              disabled={cooldown > 0}
-              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                cooldown > 0
-                  ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 shadow-lg hover:shadow-xl'
-              } text-white`}
-            >
-              {cooldown > 0 ? (
-                <>
-                  <ClockIcon className="h-5 w-5" />
-                  <span>{cooldown}秒后可用</span>
-                </>
-              ) : (
-                <>
-                  <ArrowPathIcon className="h-5 w-5" />
-                  <span>换一批</span>
-                </>
-              )}
-            </motion.button>
-          </div>
+      <div className="max-w-6xl mx-auto">
+        {/* 标题和刷新按钮 */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            白丝图片
+          </h2>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={fetchImages}
+            disabled={loading}
+            className="p-2 text-gray-500 hover:text-purple-500 rounded-lg hover:bg-gray-100 
+              dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+            title="换一批"
+          >
+            <ArrowPathIcon className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+          </motion.button>
+        </div>
 
-          {loading ? (
-            <div className="flex flex-col items-center justify-center h-[300px] sm:h-[400px] bg-gray-100 dark:bg-gray-700 rounded-xl">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-300">
-                正在加载图片{retryCount > 0 ? ` (重试 ${retryCount}/3)` : ''}...
-              </p>
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center h-[300px] sm:h-[400px] bg-gray-100 dark:bg-gray-700 rounded-xl p-4 sm:p-6">
-              <ExclamationCircleIcon className="h-12 w-12 text-red-500 mb-4" />
-              <p className="text-red-500 mb-4 text-center max-w-md">{error}</p>
-              <button
-                onClick={() => {
-                  setRetryCount(0);
-                  fetchImages();
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors"
-              >
-                <ArrowPathIcon className="h-5 w-5" />
-                重新加载
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-              {images.map((imageUrl, index) => (
+        {/* 图片网格 */}
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="aspect-[3/4] bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse"
+              />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-[400px] text-red-500">
+            <ExclamationCircleIcon className="h-12 w-12 mb-4" />
+            <p>{error}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <AnimatePresence mode="popLayout">
+              {images.map((image) => (
                 <motion.div
-                  key={imageUrl + index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="relative group"
+                  key={`${image.pid}-${image.p}`}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="group relative aspect-[3/4] bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden"
+                  onClick={() => setSelectedImage(image)}
                 >
-                  <div className="aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
-                    <img
-                      src={imageUrl}
-                      alt={`${stockingType === 'white' ? '白丝' : '黑丝'}图片 ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                      loading="lazy"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'https://placehold.co/600x800?text=加载失败';
-                      }}
-                    />
+                  <img
+                    src={image.urls.small}
+                    alt={image.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent 
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <h3 className="text-white text-sm font-medium truncate">
+                        {image.title}
+                      </h3>
+                      <p className="text-white/80 text-xs truncate">
+                        {image.author}
+                      </p>
+                    </div>
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => window.open(imageUrl, '_blank')}
-                    className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                    title="查看原图"
-                  >
-                    <ArrowPathIcon className="h-5 w-5" />
-                  </motion.button>
                 </motion.div>
               ))}
-            </div>
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* 图片预览弹窗 */}
+        <AnimatePresence>
+          {selectedImage && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90"
+              onClick={() => setSelectedImage(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
+                className="relative max-w-4xl w-full"
+                onClick={e => e.stopPropagation()}
+              >
+                <img
+                  src={selectedImage.urls.regular}
+                  alt={selectedImage.title}
+                  className="w-full h-auto rounded-lg"
+                />
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-lg 
+                    hover:bg-black/70 transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </motion.div>
+            </motion.div>
           )}
-        </motion.div>
-      </AnimatePresence>
+        </AnimatePresence>
+      </div>
     </div>
   );
 } 
