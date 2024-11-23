@@ -109,7 +109,7 @@ export default function MobileCpuRanking() {
   });
 
   // 获取所有品牌
-  const brands = ['all', ...new Set(data.map(cpu => getChipBrand(cpu.model)))];
+  const brands = ['all', ...Array.from(new Set(data.map(cpu => getChipBrand(cpu.model))))];
 
   // 回到顶部
   const scrollToTop = () => {
