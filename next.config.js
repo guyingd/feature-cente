@@ -3,7 +3,21 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['i.pixiv.re'],
+    domains: ['i.pixiv.re', 'guyinga.top', 'feature-cente.vercel.app'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.pixiv.re',
+      },
+      {
+        protocol: 'https',
+        hostname: 'guyinga.top',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.vercel.app',
+      }
+    ]
   },
   // 添加编译时优化
   compiler: {
