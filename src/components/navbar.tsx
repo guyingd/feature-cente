@@ -26,10 +26,17 @@ const navItems = [
     external: true 
   },
   { 
-    name: '国内访问', 
+    name: '境内访问', 
     href: 'https://guyinga.top', 
     icon: GlobeAltIcon, 
-    title: '国内地址',
+    title: '切换到境内',
+    external: true 
+  },
+  { 
+    name: '外网访问', 
+    href: 'https://feature-cente.vercel.app', 
+    icon: GlobeAltIcon, 
+    title: '切换到外网',
     external: true 
   }
 ];

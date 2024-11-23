@@ -4,7 +4,8 @@
 
 ## 在线访问
 
-- 国内地址：[guyinga.top](https://guyinga.top)
+- 境内地址：[guyinga.top](https://guyinga.top)
+- 外网地址：[feature-cente.vercel.app](https://feature-cente.vercel.app)
 - GitHub：[github.com/guyingd/feature-cente](https://github.com/guyingd/feature-cente)
 
 ## 主要功能

@@ -159,7 +159,7 @@ export default function About() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <p className="text-gray-600 dark:text-gray-300">
-                  国内访问地址：
+                  境内访问地址：
                 </p>
                 <a
                   href="https://guyinga.top"
@@ -175,18 +175,18 @@ export default function About() {
               </div>
               <div className="space-y-2">
                 <p className="text-gray-600 dark:text-gray-300">
-                  GitHub 地址：
+                  外网访问地址：
                 </p>
                 <a
-                  href="https://github.com/guyingd/feature-cente"
+                  href="https://feature-cente.vercel.app"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 
                     hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors
                     text-gray-700 dark:text-gray-300"
                 >
-                  <CodeBracketIcon className="h-5 w-5" />
-                  <span>guyingd/feature-cente</span>
+                  <GlobeAltIcon className="h-5 w-5" />
+                  <span>feature-cente.vercel.app</span>
                 </a>
               </div>
             </div>
