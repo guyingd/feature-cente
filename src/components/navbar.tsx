@@ -9,13 +9,21 @@ import {
   HomeIcon, 
   SparklesIcon, 
   InformationCircleIcon,
-  Bars3Icon
+  Bars3Icon,
+  CodeBracketIcon
 } from '@heroicons/react/24/outline';
 
 const navItems = [
   { name: '首页', href: '/', icon: HomeIcon, title: '功能中心' },
   { name: '功能', href: '/features', icon: SparklesIcon, title: '功能列表' },
   { name: '关于', href: '/about', icon: InformationCircleIcon, title: '关于我们' },
+  { 
+    name: 'GitHub', 
+    href: 'https://github.com/guyingd/feature-cente', 
+    icon: CodeBracketIcon, 
+    title: '源代码',
+    external: true 
+  }
 ];
 
 export function Navbar() {

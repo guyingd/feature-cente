@@ -150,6 +150,30 @@ export default function About() {
             </div>
           </div>
 
+          {/* 开源地址 */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 text-2xl font-semibold mb-4">
+              <CodeBracketIcon className="h-6 w-6 text-blue-500" />
+              <h2>开源地址</h2>
+            </div>
+            <div className="space-y-2">
+              <p className="text-gray-600 dark:text-gray-300">
+                本项目已在 GitHub 开源，欢迎访问：
+              </p>
+              <a
+                href="https://github.com/guyingd/feature-cente"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 
+                  hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors
+                  text-gray-700 dark:text-gray-300"
+              >
+                <CodeBracketIcon className="h-5 w-5" />
+                <span>guyingd/feature-cente</span>
+              </a>
+            </div>
+          </div>
+
           {/* 作者信息 */}
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-2 text-2xl font-semibold mb-4">

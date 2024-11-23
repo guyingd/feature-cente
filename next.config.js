@@ -3,12 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: [
-      'cdn.u1.huluxia.com',
-      'i.pixiv.re',
-      'cdn.tyy.huluxia.com',
-      'cdn.volcengine.huluxia.com'
-    ]
+    domains: ['i.pixiv.re'],
   },
   // 添加编译时优化
   compiler: {

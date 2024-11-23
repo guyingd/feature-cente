@@ -156,7 +156,7 @@ export default function AnimeGallery() {
         throw new Error('获取图片失败');
       }
 
-      const data: ApiResponse = await response.json();
+      const data = await response.json();
 
       if (data.error) {
         throw new Error(data.error);
@@ -723,7 +723,7 @@ export default function AnimeGallery() {
                   <h3 className="text-lg font-semibold">年龄确认</h3>
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  您即将浏览 R18 内容。请确认您已年满 18 周岁，且当前��在地区法律允许浏���此类内容。
+                  您即将浏览 R18 内容。请确认您已年满 18 周岁，且当前在地区法律允许浏此类内容。
                 </p>
                 <div className="flex justify-end gap-3">
                   <button
