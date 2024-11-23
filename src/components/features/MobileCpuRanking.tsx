@@ -49,6 +49,13 @@ const getBrandColor = (brand: string): string => {
   return colors[brand] || colors.Other;
 };
 
+// 获取所有品牌
+const getBrands = (data: CpuData[]): string[] => {
+  const brandSet = new Set<string>();
+  data.forEach(cpu => brandSet.add(getChipBrand(cpu.model)));
+  return ['all', ...Array.from(brandSet)];
+};
+
 export default function MobileCpuRanking() {
   const [data, setData] = useState<CpuData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,8 +115,8 @@ export default function MobileCpuRanking() {
     return matchesSearch && matchesBrand;
   });
 
-  // 获取所有品牌
-  const brands = ['all', ...Array.from(new Set(data.map(cpu => getChipBrand(cpu.model))))];
+  // 使用新的获取品牌函数
+  const brands = getBrands(data);
 
   // 回到顶部
   const scrollToTop = () => {
