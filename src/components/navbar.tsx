@@ -10,7 +10,8 @@ import {
   SparklesIcon, 
   InformationCircleIcon,
   Bars3Icon,
-  CodeBracketIcon
+  CodeBracketIcon,
+  GlobeAltIcon
 } from '@heroicons/react/24/outline';
 
 const navItems = [
@@ -22,6 +23,13 @@ const navItems = [
     href: 'https://github.com/guyingd/feature-cente', 
     icon: CodeBracketIcon, 
     title: '源代码',
+    external: true 
+  },
+  { 
+    name: '国内访问', 
+    href: 'https://guyinga.top', 
+    icon: GlobeAltIcon, 
+    title: '国内地址',
     external: true 
   }
 ];
